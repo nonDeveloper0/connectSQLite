@@ -20,7 +20,7 @@ namespace ConnectSQLite
 
         #region Constructors
         public DatabaseManager(string dbPath)
-        {
+        {   
             connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
         }
