@@ -21,7 +21,7 @@ namespace ConnectSQLite
         #region Constructors
         public DatabaseManager(string dbPath)
         {
-            connection = new SqliteConnection($"Data Source={dbPath}");            connection.Open();
+            connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
         }
         #endregion
@@ -33,7 +33,7 @@ namespace ConnectSQLite
             string sql = $"""
                 CREATE TABLE IF NOT EXISTS {tableName} 
                 (Name TEXT, 
-                Id INTEGER PRIMARY KEY)
+                Id INTEGER PRIMARY KEY NOT NULL)
                 """;
             using var command = new SqliteCommand(sql, connection);
             command.ExecuteNonQuery();
@@ -61,7 +61,7 @@ namespace ConnectSQLite
                     command.Parameters["@name"].Value = names[i];
                     command.ExecuteNonQuery();  // 생략 불가. "실제 저장 실행" 명령
                 }
-
+                Console.WriteLine("Insert Commit 완료");
                 transaction.Commit();
             }
             catch (Exception ex)
@@ -83,6 +83,7 @@ namespace ConnectSQLite
             command.Parameters.AddWithValue("@newName", newName);
             command.Parameters.AddWithValue("@id", id);
             command.ExecuteNonQuery();
+            Console.WriteLine("Data Update 완료");
         }
 
         // SELECT 조회
@@ -100,10 +101,8 @@ namespace ConnectSQLite
             {
                 data.Add(reader.GetValue(0));
             }
-
             return data;
         }
-
         #endregion
     }
 }
