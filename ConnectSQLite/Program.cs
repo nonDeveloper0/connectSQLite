@@ -21,64 +21,35 @@ namespace ConnectSQLite
             {
                 var supabase = new SupabaseManager(SUPABASE_URL, SUPABASE_KEY);
                 await supabase.InitializeAsync();
+
+                var task = supabase.GetAllDataAsync<Element>(); //Task 반환. 아직 완료 안됨
+                List<Element> elments = await task;             //실제 데이터 반환
+
+                foreach (var e in elments)
+                {
+                    Console.WriteLine($"Category: {e.Category}, ElementId: {e.ElementId}");
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
             }
         }
-        #region Methods
-
-        //// 데이터 조회
-        //private static async Task GetDataAsync()
-        //{
-        //    try
-        //    {
-        //        var result = await _supabaseClient
-        //            .From<Student>()
-        //            .Get();
-
-        //        if (result != null && result.Models != null && result.Models.Count > 0)
-        //        {
-        //            Console.WriteLine($"조회된 학생 수: {result.Models.Count}\n");
-
-        //            foreach (var student in result.Models)
-        //            {
-        //                Console.WriteLine($"Category: {student.Category}");
-        //                Console.WriteLine($"ElementId: {student.ElementId}");
-        //                Console.WriteLine("---");
-        //            }
-        //        }
-        //        else
-        //        {
-        //            Console.WriteLine("조회된 데이터가 없습니다.");
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"❌ 데이터 조회 실패: {ex.Message}");
-        //        throw;
-        //    }
-        //}
-
     }
-
 
     // 테이블
-    [Table("Student")]
-    public class Student : BaseModel
+    [Table("Element")]
+    public class Element : BaseModel
     {
-        // id - int8 (BaseModel에서 자동 상속)
-        // created_at - timestamp (BaseModel에서 자동 상속)
-
+        [Column("id")]
+        public int Id { get; set; }
         [Column("category")]
         public string Category { get; set; }
-
-        [Column("elementid")]
+        [Column("elementId")]
         public int ElementId { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
     }
-    #endregion
-
     #endregion
 
     #region SQLite 활용
