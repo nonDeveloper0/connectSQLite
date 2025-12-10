@@ -1,5 +1,5 @@
-﻿using Microsoft.Data.Sqlite;
-using Supabase;
+﻿using Supabase;
+using Supabase.Postgrest;
 using Supabase.Postgrest.Models;
 using System;
 using System.Collections.Generic;
@@ -7,8 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using Client = Supabase.Client;
 
-namespace ConnectSQLite
+namespace ConnectSupabase
 {
     public class SupabaseManager
     {
@@ -18,6 +19,7 @@ namespace ConnectSQLite
         #endregion
 
         #region Properties
+
         #endregion
 
         #region Constructors
@@ -33,7 +35,7 @@ namespace ConnectSQLite
         }
         #endregion
 
-        #region Methods
+        #region Methods   
         // 초기화
         public async Task InitializeAsync()
         {
@@ -50,6 +52,14 @@ namespace ConnectSQLite
             }
         }
 
+        // Client 반환
+        public Client GetClient()
+        {
+            if (_supabaseClient == null)
+                throw new InvalidOperationException("초기화 필요");
+            return _supabaseClient;
+        }
+
         // SELECT - 전체 조회
         public async Task<List<T>> GetAllDataAsync<T>() where T : BaseModel, new()
         {
@@ -63,7 +73,7 @@ namespace ConnectSQLite
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ 조회 실패: {ex.Message}");
+                Console.WriteLine($"조회 실패: {ex.Message}");
                 throw;
             }
         }
@@ -83,7 +93,7 @@ namespace ConnectSQLite
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ 컬럼 조회 실패: {ex.Message}");
+                Console.WriteLine($"컬럼 조회 실패: {ex.Message}");
                 throw;
             }
         }
@@ -104,7 +114,7 @@ namespace ConnectSQLite
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ 필터링 조회 실패: {ex.Message}");
+                Console.WriteLine($"필터링 조회 실패: {ex.Message}");
                 throw;
             }
         }
@@ -118,12 +128,12 @@ namespace ConnectSQLite
                     .From<T>()
                     .Insert(data);
 
-                Console.WriteLine("✅ Insert 완료");
+                Console.WriteLine("Insert 완료");
                 return result?.Models?.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Insert 실패: {ex.Message}");
+                Console.WriteLine($"Insert 실패: {ex.Message}");
                 throw;
             }
         }
@@ -137,12 +147,12 @@ namespace ConnectSQLite
                     .From<T>()
                     .Insert(dataList);
 
-                Console.WriteLine($"✅ Bulk Insert 완료 ({dataList.Count}개)");
+                Console.WriteLine($"Bulk Insert 완료 ({dataList.Count}개)");
                 return result?.Models ?? new List<T>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Bulk Insert 실패: {ex.Message}");
+                Console.WriteLine($"Bulk Insert 실패: {ex.Message}");
                 throw;
             }
         }
@@ -156,70 +166,73 @@ namespace ConnectSQLite
                     .From<T>()
                     .Update(data);
 
-                Console.WriteLine("✅ Update 완료");
+                Console.WriteLine("Update 완료");
                 return result?.Models?.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Update 실패: {ex.Message}");
+                Console.WriteLine($"Update 실패: {ex.Message}");
                 throw;
             }
         }
 
         // UPSERT - Insert와 Update를 합친 기능 (있으면 Update, 없으면 Insert)
-        public async Task<T> UpsertDataAsync<T>(T data) where T : BaseModel, new()
+        // UPSERT 사용시 어떤 컬럼을 기준으로 중복 판단할지 명시해야함
+        public async Task<T> UpsertDataAsync<T>(T data, string primaryKeyName) where T : BaseModel, new()
         {
             try
             {
                 var result = await _supabaseClient
                     .From<T>()
+                    .OnConflict(primaryKeyName)
                     .Upsert(data);
 
-                Console.WriteLine("✅ Upsert 완료 (Insert 또는 Update)");
+                Console.WriteLine("Upsert 완료 (Insert 또는 Update)");
                 return result?.Models?.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Upsert 실패: {ex.Message}");
+                Console.WriteLine($"Upsert 실패: {ex.Message}");
                 throw;
             }
         }
 
         // UPSERT - 대량 데이터
-        public async Task<List<T>> UpsertBulkDataAsync<T>(List<T> dataList) where T : BaseModel, new()
+        public async Task<List<T>> UpsertBulkDataAsync<T>(List<T> dataList, string primaryKeyName) where T : BaseModel, new()
         {
             try
             {
                 var result = await _supabaseClient
                     .From<T>()
+                    .OnConflict(primaryKeyName)
                     .Upsert(dataList);
 
-                Console.WriteLine($"✅ Bulk Upsert 완료 ({dataList.Count}개)");
+                Console.WriteLine($"Bulk Upsert 완료 ({dataList.Count}개)");
                 return result?.Models ?? new List<T>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Bulk Upsert 실패: {ex.Message}");
+                Console.WriteLine($"Bulk Upsert 실패: {ex.Message}");
                 throw;
             }
         }
 
         // DELETE - 데이터 삭제
-        public async Task DeleteDataAsync<T>(string columnName, string filterValue)
+        public async Task DeleteDataAsync<T>(string columnName, int filterValue)
             where T : BaseModel, new()
         {
             try
             {
                 await _supabaseClient
                     .From<T>()
-                    .Where(x => x.ToString().Contains(filterValue))
+                    .Filter(columnName, Constants.Operator.Equals, filterValue)
                     .Delete();
 
-                Console.WriteLine("✅ Delete 완료");
+                Console.WriteLine("Delete 완료");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Delete 실패: {ex.Message}");
+                Console.WriteLine($"Delete 실패: {ex.Message}");
                 throw;
             }
         }
@@ -230,12 +243,12 @@ namespace ConnectSQLite
             try
             {
                 var session = await _supabaseClient.Auth.SignUp(email, password);
-                Console.WriteLine($"✅ 회원가입 성공: {email}");
+                Console.WriteLine($"회원가입 성공: {email}");
                 return session;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ 회원가입 실패: {ex.Message}");
+                Console.WriteLine($"회원가입 실패: {ex.Message}");
                 throw;
             }
         }
@@ -246,12 +259,12 @@ namespace ConnectSQLite
             try
             {
                 var session = await _supabaseClient.Auth.SignInWithPassword(email, password);
-                Console.WriteLine($"✅ 로그인 성공: {email}");
+                Console.WriteLine($"로그인 성공: {email}");
                 return session;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ 로그인 실패: {ex.Message}");
+                Console.WriteLine($"로그인 실패: {ex.Message}");
                 throw;
             }
         }
@@ -262,11 +275,11 @@ namespace ConnectSQLite
             try
             {
                 await _supabaseClient.Auth.SignOut();
-                Console.WriteLine("✅ 로그아웃 성공");
+                Console.WriteLine("로그아웃 성공");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ 로그아웃 실패: {ex.Message}");
+                Console.WriteLine($" 로그아웃 실패: {ex.Message}");
                 throw;
             }
         }
