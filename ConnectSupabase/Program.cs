@@ -28,6 +28,31 @@ namespace ConnectSupabase
                 foreach (var b in a.Models)
                     Console.WriteLine(b.Diameter);
 
+                // 회원가입 SignUp
+                try
+                {
+                    string email = "pjwater727@gmail.com";
+                    string password = "1456asdf111";
+                    await client.Auth.SignUp(email, password);
+                    Console.WriteLine("가입 성공");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+
+
+                // 로그인 SignIn
+
+
+
+
+                // 로그아웃 SignOut
+
+
+
+                #region CRUD
+                /*
                 // SELECT ALL
                 var selectAllElments = await supabase.GetAllDataAsync<Element>();
 
@@ -45,7 +70,7 @@ namespace ConnectSupabase
                 foreach (var element in filteredElements)
                     Console.WriteLine($"Category: {element.Category}, ElementId: {element.ElementId}");
 
-                /*
+                
                 // INSERT- 단일
                 Console.WriteLine("\n---데이터 조회 WHERE---");
                 var newElement = new Element { Category = "Furniture", ElementId = 999999 };
@@ -63,7 +88,7 @@ namespace ConnectSupabase
                 var insertedBulkElements = await supabase.InsertBulkDataAsync(bulkElements);
                 foreach (var element in insertedBulkElements)
                     Console.WriteLine($"Inserted Element - Category: {element.Category}, ElementId: {element.ElementId}");
-                */
+                
 
                 // UPDATE
                 Console.WriteLine("\n---단일 업데이트---");
@@ -111,6 +136,9 @@ namespace ConnectSupabase
                     Console.WriteLine($"Category: {e.Category}, ElementId: {e.ElementId}");
                 }
 
+             
+                */
+                #endregion
             }
             catch (Exception ex)
             {
